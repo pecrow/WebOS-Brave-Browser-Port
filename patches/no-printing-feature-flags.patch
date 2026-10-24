@@ -1,0 +1,18 @@
+diff --git a/chrome/browser/about_flags.cc b/chrome/browser/about_flags.cc
+--- a/chrome/browser/about_flags.cc
++++ b/chrome/browser/about_flags.cc
+@@ -11587,12 +11587,14 @@
+      FEATURE_VALUE_TYPE(
+          enterprise::webstore::kChromeWebStoreNavigationThrottle)},
+ #endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN)
++#if BUILDFLAG(ENABLE_PRINTING)
+     {"align-pdf-default-print-settings-with-html",
+      flag_descriptions::kAlignPdfDefaultPrintSettingsWithHTMLName,
+      flag_descriptions::kAlignPdfDefaultPrintSettingsWithHTMLDescription,
+      kOsAll,
+      FEATURE_VALUE_TYPE(
+          printing::features::kAlignPdfDefaultPrintSettingsWithHTML)},
++#endif  // BUILDFLAG(ENABLE_PRINTING)
+ 
+ #if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_MAC) || BUILDFLAG(IS_LINUX) || \
+     BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)

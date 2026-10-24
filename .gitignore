@@ -1,0 +1,6 @@
+.reference/
+downloads/
+out/
+node_modules/
+__pycache__/
+*.pyc

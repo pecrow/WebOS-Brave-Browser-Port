@@ -1,0 +1,33 @@
+source_set("webos") {
+  sources = [
+    "ozone_platform_webos.cc",
+    "protocol.c",
+    "protocol.h",
+    "webos_canvas.cc",
+    "webos_canvas.h",
+    "webos_connection.cc",
+    "webos_connection.h",
+    "webos_input_method.cc",
+    "webos_input_method.h",
+    "webos_window.cc",
+    "webos_window.h",
+  ]
+  defines = [ "OZONE_IMPLEMENTATION" ]
+  deps = [
+    "//base",
+    "//skia",
+    "//ui/base",
+    "//ui/base/cursor",
+    "//ui/base/ime",
+    "//ui/display",
+    "//ui/events",
+    "//ui/events:dom_keycode_converter",
+    "//ui/events/ozone/layout",
+    "//ui/events/platform",
+    "//ui/gfx",
+    "//ui/ozone:ozone_base",
+    "//ui/ozone/common",
+    "//ui/ozone/platform/headless",
+    "//ui/platform_window",
+  ]
+}

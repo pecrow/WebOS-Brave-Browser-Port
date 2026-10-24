@@ -1,0 +1,19 @@
+diff --git a/brave/app/generate_command_metadata.py b/brave/app/generate_command_metadata.py
+--- a/brave/app/generate_command_metadata.py
++++ b/brave/app/generate_command_metadata.py
+@@ -13,7 +13,6 @@
+     "IDC_ADD_NEW_PROFILE",
+     "IDC_ADD_NEW_TAB_TO_GROUP",
+     "IDC_BACK",
+-    "IDC_BASIC_PRINT",
+     "IDC_BOOKMARK_ALL_TABS",
+     "IDC_BOOKMARK_BAR_ADD_NEW_BOOKMARK",
+     "IDC_BOOKMARK_BAR_ADD_TO_BOOKMARKS_BAR",
+@@ -102,7 +101,6 @@
+     "IDC_PASTE_AND_GO",
+     "IDC_PASTE",
+     "IDC_PERFORMANCE",
+-    "IDC_PRINT",
+     "IDC_QRCODE_GENERATOR",
+     "IDC_RELOAD_BYPASSING_CACHE",
+     "IDC_RELOAD_CLEARING_CACHE",

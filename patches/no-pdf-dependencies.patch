@@ -1,0 +1,37 @@
+diff --git a/chrome/browser/renderer_context_menu/BUILD.gn b/chrome/browser/renderer_context_menu/BUILD.gn
+--- a/chrome/browser/renderer_context_menu/BUILD.gn
++++ b/chrome/browser/renderer_context_menu/BUILD.gn
+@@ -133,7 +133,6 @@
+       "//chrome/browser/lens/region_search",
+       "//chrome/browser/media/router:media_router_feature",
+       "//chrome/browser/password_manager",
+-      "//chrome/browser/pdf",
+       "//chrome/browser/predictors",
+       "//chrome/browser/prefs",
+       "//chrome/browser/preloading:prefs",
+@@ -191,6 +190,10 @@
+       "//url",
+     ]
+ 
++    if (enable_pdf) {
++      deps += [ "//chrome/browser/pdf" ]
++    }
++
+     if (enable_print_preview) {
+       deps += [ "//chrome/browser/printing" ]
+     }
+diff --git a/chrome/browser/contextual_tasks/BUILD.gn b/chrome/browser/contextual_tasks/BUILD.gn
+--- a/chrome/browser/contextual_tasks/BUILD.gn
++++ b/chrome/browser/contextual_tasks/BUILD.gn
+@@ -464,7 +464,10 @@
+       "location_bar_stub.cc",
+     ]
++    if (enable_pdf) {
++      deps += [ "//chrome/browser/pdf" ]
++    }
++
+     deps += [
+-      "//chrome/browser/pdf",
+       "//chrome/browser/resources/contextual_tasks:resources",
+       "//chrome/browser/resources/webui_toolbar_shared:resources",
+       "//chrome/browser/tab_list",

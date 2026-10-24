@@ -1,0 +1,16 @@
+{
+  "braveVersion": "1.97.59",
+  "chromiumVersion": "155.0.8059.85",
+  "nodeVersion": "24.16.0",
+  "pnpmVersion": "11.11.0",
+  "targetOS": "linux",
+  "targetCPU": "arm64",
+  "appId": "org.webosbrew.brave.b9",
+  "displayHostCPU": "arm",
+  "sdlVersion": "3.4.16-webos.5",
+  "sdlSha256": "e3e99a88cdd88b246d68c3cea42dd0f7c4ac635563ed5352d3bf1a725dc3ac4b",
+  "armToolchainRelease": "webos-c14c7bd",
+  "armToolchainSha256": "61ada10c6b2b94510968b99137762cbd7a7956b4bdc4e456792ae8bbe000410e",
+  "experimentalReducedSandbox": true,
+  "runAsRoot": false
+}

@@ -1,0 +1,22 @@
+diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
+--- a/chrome/test/BUILD.gn
++++ b/chrome/test/BUILD.gn
+@@ -6405,7 +6405,6 @@
+       "//chrome/browser/webauthn/proto",
+       "//chrome/common/read_anything:mojo_bindings",
+       "//chrome/services/readaloud:unit_tests",
+-      "//chrome/services/speech:unit_tests",
+       "//components/app_constants",
+       "//components/application_locale_storage",
+       "//components/color",
+@@ -6479,6 +6478,10 @@
+       "//ui/webui/tracked_element:unit_tests",
+     ]
+ 
++    if (enable_speech_service) {
++      deps += [ "//chrome/services/speech:unit_tests" ]
++    }
++
+     data += [ "//chromeos/ash/experiences/arc/test/data/icons/" ]
+ 
+     if (include_js2gtest_tests && is_chromeos) {

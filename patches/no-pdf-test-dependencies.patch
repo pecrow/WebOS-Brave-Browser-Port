@@ -1,0 +1,147 @@
+diff --git a/chrome/browser/extensions/BUILD.gn b/chrome/browser/extensions/BUILD.gn
+--- a/chrome/browser/extensions/BUILD.gn
++++ b/chrome/browser/extensions/BUILD.gn
+@@ -3038,6 +3038,13 @@
+     }
+ 
++    if (enable_pdf) {
++      deps += [
++        "//chrome/browser/extensions/api/pdf_viewer_private:browser_tests",
++        "//chrome/browser/pdf:pdf_extension_test_utils",
++      ]
++    }
++
+     deps += [
+       "//apps:browser_tests",
+       "//chrome/browser:browser_process_platform_part",
+       "//chrome/browser/affiliations",
+@@ -3058,11 +3065,9 @@
+       "//chrome/browser/extensions/api/messaging:test_support",
+       "//chrome/browser/extensions/api/mime_handlers:browser_tests",
+       "//chrome/browser/extensions/api/passwords_private:test_support",
+-      "//chrome/browser/extensions/api/pdf_viewer_private:browser_tests",
+       "//chrome/browser/hid",
+       "//chrome/browser/password_manager",
+       "//chrome/browser/password_manager:test_support",
+-      "//chrome/browser/pdf:pdf_extension_test_utils",
+       "//chrome/browser/prefetch",
+       "//chrome/browser/service_worker:browser_tests",
+       "//chrome/browser/sync_file_system",
+diff --git a/chrome/browser/renderer_context_menu/BUILD.gn b/chrome/browser/renderer_context_menu/BUILD.gn
+--- a/chrome/browser/renderer_context_menu/BUILD.gn
++++ b/chrome/browser/renderer_context_menu/BUILD.gn
+@@ -387,7 +387,6 @@
+       "//chrome/browser/context_hub",
+       "//chrome/browser/devtools",
+       "//chrome/browser/enterprise/data_controls:test_support",
+-      "//chrome/browser/pdf:pdf_extension_test_utils",
+       "//chrome/browser/profiles:misc",
+       "//chrome/browser/search_engines",
+       "//chrome/browser/send_tab_to_self",
+@@ -438,5 +437,8 @@
+ 
+     if (enable_pdf) {
+-      deps += [ "//chrome/browser/pdf:pdf_extension_test_base" ]
++      deps += [
++        "//chrome/browser/pdf:pdf_extension_test_base",
++        "//chrome/browser/pdf:pdf_extension_test_utils",
++      ]
+     }
+   }
+diff --git a/chrome/browser/back_forward_cache/BUILD.gn b/chrome/browser/back_forward_cache/BUILD.gn
+--- a/chrome/browser/back_forward_cache/BUILD.gn
++++ b/chrome/browser/back_forward_cache/BUILD.gn
+@@ -32,7 +32,6 @@
+       "//chrome/browser:browser_process",
+       "//chrome/browser/content_settings",
+       "//chrome/browser/content_settings:content_settings_factory",
+-      "//chrome/browser/pdf:test_mime_handler_stream_manager",
+       "//chrome/browser/preloading:test_support",
+       "//chrome/browser/profiles:profile",
+       "//chrome/browser/task_manager:test_support",
+@@ -62,6 +61,7 @@
+     if (enable_pdf) {
+       deps += [
+         "//chrome/browser/pdf:pdf_extension_test_utils",
++        "//chrome/browser/pdf:test_mime_handler_stream_manager",
+         "//pdf:features",
+       ]
+     }
+diff --git a/chrome/browser/ui/lens/BUILD.gn b/chrome/browser/ui/lens/BUILD.gn
+--- a/chrome/browser/ui/lens/BUILD.gn
++++ b/chrome/browser/ui/lens/BUILD.gn
+@@ -374,7 +374,6 @@
+       "//chrome/browser/contextual_tasks:impl",
+       "//chrome/browser/contextual_tasks:test_support",
+       "//chrome/browser/contextual_tasks:ui",
+       "//chrome/browser/lens/core/mojom:mojo_bindings",
+-      "//chrome/browser/pdf:pdf_extension_test_base",
+       "//chrome/browser/profiles:profile",
+       "//chrome/browser/signin/e2e_tests:test_support",
+@@ -436,5 +435,8 @@
+     ]
+     if (enable_pdf) {
+-      deps += [ "//chrome/browser/pdf" ]
++      deps += [
++        "//chrome/browser/pdf",
++        "//chrome/browser/pdf:pdf_extension_test_base",
++      ]
+     }
+ 
+diff --git a/chrome/browser/ui/read_anything/BUILD.gn b/chrome/browser/ui/read_anything/BUILD.gn
+--- a/chrome/browser/ui/read_anything/BUILD.gn
++++ b/chrome/browser/ui/read_anything/BUILD.gn
+@@ -7,6 +7,7 @@
+ import("//build/config/compiler/compiler.gni")
+ import("//chrome/common/features.gni")
+ import("//extensions/buildflags/buildflags.gni")
++import("//pdf/features.gni")
+ import("//testing/test.gni")
+ 
+ source_set("prefs") {
+@@ -141,7 +142,6 @@
+     "//base/test:test_support",
+     "//chrome/browser",
+     "//chrome/browser/optimization_guide:test_support",
+-    "//chrome/browser/pdf:pdf_extension_test_utils",
+     "//chrome/browser/search_engines",
+     "//chrome/browser/ui",
+     "//chrome/browser/ui:ui_features",
+@@ -162,6 +162,9 @@
+     "//testing/gtest",
+     "//ui/views",
+   ]
++  if (enable_pdf) {
++    deps += [ "//chrome/browser/pdf:pdf_extension_test_utils" ]
++  }
+ }
+ 
+ source_set("interactive_ui_tests") {
+diff --git a/chrome/browser/ui/webui/side_panel/read_anything/BUILD.gn b/chrome/browser/ui/webui/side_panel/read_anything/BUILD.gn
+--- a/chrome/browser/ui/webui/side_panel/read_anything/BUILD.gn
++++ b/chrome/browser/ui/webui/side_panel/read_anything/BUILD.gn
+@@ -2,6 +2,8 @@
+ # Use of this source code is governed by a BSD-style license that can be
+ # found in the LICENSE file.
+ 
++import("//pdf/features.gni")
++
+ assert(!is_android)
+ 
+ source_set("read_anything") {
+@@ -79,7 +81,6 @@
+   sources = [ "read_anything_untrusted_page_handler_browsertest.cc" ]
+   deps = [
+     ":read_anything",
+-    "//chrome/browser/pdf:pdf_extension_test_utils",
+     "//chrome/browser/speech",
+     "//chrome/browser/translate",
+     "//chrome/browser/ui/browser_window",
+@@ -100,4 +101,7 @@
+     "//testing/gmock",
+     "//testing/gtest",
+   ]
++  if (enable_pdf) {
++    deps += [ "//chrome/browser/pdf:pdf_extension_test_utils" ]
++  }
+ }

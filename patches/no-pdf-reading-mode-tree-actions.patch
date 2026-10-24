@@ -1,0 +1,98 @@
+diff --git a/chrome/browser/ui/webui/side_panel/read_anything/read_anything_untrusted_page_handler.cc b/chrome/browser/ui/webui/side_panel/read_anything/read_anything_untrusted_page_handler.cc
+--- a/chrome/browser/ui/webui/side_panel/read_anything/read_anything_untrusted_page_handler.cc
++++ b/chrome/browser/ui/webui/side_panel/read_anything/read_anything_untrusted_page_handler.cc
+@@ -276,12 +276,14 @@
+ constexpr std::string_view kRendererSelectionRequestHistogram =
+     "Accessibility.ReadAnything.RendererRequestForSelection.Result";
+ 
++#if BUILDFLAG(ENABLE_PDF)
+ // The contents MIME type is fixed when the main frame commits, so this reliably
+ // identifies full-page PDFs before their content frame exists.
+ bool IsFullPagePdf(content::WebContents* contents) {
+   return contents && contents->GetContentsMimeType() == pdf::kPDFMimeType;
+ }
++#endif  // BUILDFLAG(ENABLE_PDF)
+ 
+ // Returns whether `rfh` is a subframe of the primary page that the primary main
+ // frame can already script, i.e. it is same-origin with it. Opaque main frame
+ // origins are excluded because opaque-origin frames cannot script each other.
+@@ -895,35 +895,37 @@
+     return false;
+   }
+ 
++#if BUILDFLAG(ENABLE_PDF)
+   bool are_contents_pdf =
+       chrome_pdf::features::IsOopifPdfEnabled()
+           ? !!extensions::mime_handler::MimeHandlerStreamManager::
+                  FromWebContents(contents)
+           : !!pdf_observer_;
+ 
+-  if (!are_contents_pdf) {
+-    // `contents` is the main observed contents here.
+-    content::RenderFrameHost* main_frame = contents->GetPrimaryMainFrame();
+-    return rfh == main_frame || IsSameOriginSubframe(rfh, main_frame) ||
+-           IsWhatsNewEmbeddedContentFrame(rfh, main_frame);
+-  }
++  if (are_contents_pdf) {
++    content::RenderFrameHost* pdf_rfh =
++        chrome_pdf::features::IsOopifPdfEnabled()
++            ? pdf_frame_util::FindFullPagePdfExtensionHost(contents)
++            : pdf_frame_util::FindPdfChildFrame(contents->GetPrimaryMainFrame());
++    if (!pdf_rfh) {
++      return false;
++    }
++    if (rfh == pdf_rfh) {
++      return true;
++    }
+ 
+-  content::RenderFrameHost* pdf_rfh =
+-      chrome_pdf::features::IsOopifPdfEnabled()
+-          ? pdf_frame_util::FindFullPagePdfExtensionHost(contents)
+-          : pdf_frame_util::FindPdfChildFrame(contents->GetPrimaryMainFrame());
+-  if (!pdf_rfh) {
+-    return false;
+-  }
+-  if (rfh == pdf_rfh) {
+-    return true;
++    // For OOPIF PDFs, `pdf_rfh` is the extension host, while PDF content lives
++    // in its child frame. Accept both so requests targeting either the extension
++    // host or the content frame succeed.
++    return chrome_pdf::features::IsOopifPdfEnabled() &&
++           rfh == pdf_frame_util::FindPdfChildFrame(pdf_rfh);
+   }
++#endif  // BUILDFLAG(ENABLE_PDF)
+ 
+-  // For OOPIF PDFs, `pdf_rfh` is the extension host, while PDF content lives
+-  // in its child frame. Accept both so requests targeting either the extension
+-  // host or the content frame succeed.
+-  return chrome_pdf::features::IsOopifPdfEnabled() &&
+-         rfh == pdf_frame_util::FindPdfChildFrame(pdf_rfh);
++  // `contents` is the main observed contents here.
++  content::RenderFrameHost* main_frame = contents->GetPrimaryMainFrame();
++  return rfh == main_frame || IsSameOriginSubframe(rfh, main_frame) ||
++         IsWhatsNewEmbeddedContentFrame(rfh, main_frame);
+ }
+ 
+ bool ReadAnythingUntrustedPageHandler::AreActionsAllowedInTree(
+@@ -934,6 +936,7 @@
+     return false;
+   }
+ 
++#if BUILDFLAG(ENABLE_PDF)
+   content::WebContents* contents = GetWebContents();
+   bool are_contents_pdf =
+       chrome_pdf::features::IsOopifPdfEnabled()
+@@ -941,7 +944,12 @@
+                  FromWebContents(contents)
+           : !!pdf_observer_;
+ 
+-  return are_contents_pdf || rfh->GetLastCommittedURL().SchemeIsHTTPOrHTTPS();
++  if (are_contents_pdf) {
++    return true;
++  }
++#endif  // BUILDFLAG(ENABLE_PDF)
++
++  return rfh->GetLastCommittedURL().SchemeIsHTTPOrHTTPS();
+ }
+ 
+ void ReadAnythingUntrustedPageHandler::OnLineSpaceChange(

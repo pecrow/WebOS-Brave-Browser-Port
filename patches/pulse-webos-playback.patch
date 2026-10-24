@@ -1,0 +1,14 @@
+diff --git a/src/pulse/stream.c b/src/pulse/stream.c
+--- a/src/pulse/stream.c
++++ b/src/pulse/stream.c
+@@ -1511,6 +1511,10 @@
+             pa_tagstruct_put_format_info(t, s->req_formats[i]);
+     }
+ 
++    /* LG webOS 4.x requires a reserved boolean after protocol-31 playback requests. */
++    if (s->direction == PA_STREAM_PLAYBACK && s->context->version == 31)
++        pa_tagstruct_put_boolean(t, false);
++
+     if (s->context->version >= 22 && s->direction == PA_STREAM_RECORD) {
+         pa_tagstruct_put_cvolume(t, volume);
+         pa_tagstruct_put_boolean(t, flags & PA_STREAM_START_MUTED);

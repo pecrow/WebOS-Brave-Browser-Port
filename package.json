@@ -1,0 +1,12 @@
+{
+  "name": "brave-webos-maintenance",
+  "private": true,
+  "scripts": {
+    "prepare": "node scripts/prepare-adblock.js",
+    "test:adblock": "node tests/adblock-test.js",
+    "test:profile": "node tests/profile-test.js"
+  },
+  "dependencies": {
+    "acorn": "8.15.0"
+  }
+}

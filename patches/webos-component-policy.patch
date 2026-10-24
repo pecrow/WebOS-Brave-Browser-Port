@@ -1,0 +1,120 @@
+diff --git a/brave/chromium_src/components/component_updater/component_installer.h b/brave/chromium_src/components/component_updater/component_installer.h
+--- a/brave/chromium_src/components/component_updater/component_installer.h
++++ b/brave/chromium_src/components/component_updater/component_installer.h
+@@ -30,6 +30,7 @@
+ #define AllowUpdatesOnMeteredConnections \
+   IsBraveComponent() const;              \
++  virtual bool IsAdBlockComponent() const; \
+   virtual bool AllowUpdatesOnMeteredConnections
+ 
+ #include <components/component_updater/component_installer.h>  // IWYU pragma: export
+ 
+diff --git a/brave/chromium_src/components/component_updater/component_installer.cc b/brave/chromium_src/components/component_updater/component_installer.cc
+--- a/brave/chromium_src/components/component_updater/component_installer.cc
++++ b/brave/chromium_src/components/component_updater/component_installer.cc
+@@ -20,6 +20,10 @@
+ bool ComponentInstallerPolicy::IsBraveComponent() const {
+   return false;
+ }
+ 
++bool ComponentInstallerPolicy::IsAdBlockComponent() const {
++  return false;
++}
++
+ void ComponentInstaller::Register(ComponentUpdateService* cus,
+                                   base::OnceClosure callback) {
+@@ -69,6 +73,21 @@
+               << ".";
+       return;
+     }
++    static constexpr auto kTVSecurityComponents =
++        base::MakeFixedFlatSet<std::string_view>({
++            "CRLSet",
++            "Certificate Error Assistant",
++            "Crowd Deny",
++            "File Type Policies",
++            "PKI Metadata",
++            "Safety Tips",
++            "Zxcvbn Data Dictionaries",
++        });
++    if (!installer_policy_->IsAdBlockComponent() &&
++        !kTVSecurityComponents.contains(installer_policy_->GetName())) {
++      LOG(INFO) << "Skipping optional TV component " << id;
++      return;
++    }
+   }
+   Register_ChromiumImpl(std::move(register_callback), std::move(callback),
+                         registered_version, max_previous_product_version);
+diff --git a/brave/components/brave_shields/core/browser/ad_block_component_installer.cc b/brave/components/brave_shields/core/browser/ad_block_component_installer.cc
+--- a/brave/components/brave_shields/core/browser/ad_block_component_installer.cc
++++ b/brave/components/brave_shields/core/browser/ad_block_component_installer.cc
+@@ -12,7 +12,8 @@
+ #include "base/base64.h"
+ #include "base/containers/to_vector.h"
+ #include "base/functional/bind.h"
+ #include "base/functional/callback.h"
++#include "base/logging.h"
+ #include "brave/components/brave_component_updater/browser/brave_on_demand_updater.h"
+ #include "brave/components/brave_shields/core/common/brave_shield_constants.h"
+ #include "components/component_updater/component_installer.h"
+@@ -59,6 +59,8 @@
+   std::string GetName() const override;
+   update_client::InstallerAttributes GetInstallerAttributes() const override;
+   bool IsBraveComponent() const override;
++  bool IsAdBlockComponent() const override { return true; }
++  bool AllowUpdates() const override { return false; }
+ 
+  private:
+   const std::string component_id_;
+@@ -131,11 +133,8 @@
+ }
+ 
+ void OnRegistered(const std::string& component_id) {
+-  // Unlike other components, which are only installed but not updated in
+-  // `OnRegistered`, we do always want to update the ad block component upon
+-  // registration.
+-  BraveOnDemandUpdater::GetInstance()->OnDemandUpdate(
+-      component_id, component_updater::OnDemandUpdater::Priority::FOREGROUND);
++  VLOG(1) << "TV ad-block data is maintained by the public-source updater: "
++          << component_id;
+ }
+ 
+ }  // namespace
+diff --git a/brave/chromium_src/components/component_updater/configurator_impl.cc b/brave/chromium_src/components/component_updater/configurator_impl.cc
+--- a/brave/chromium_src/components/component_updater/configurator_impl.cc
++++ b/brave/chromium_src/components/component_updater/configurator_impl.cc
+@@ -26,7 +26,7 @@
+ }
+ 
+ bool ConfiguratorImpl::EnabledCupSigning() const {
+-  return false;
++  return true;
+ }
+ 
+ }  // namespace component_updater
+diff --git a/brave/chromium_src/components/update_client/protocol_serializer.cc b/brave/chromium_src/components/update_client/protocol_serializer.cc
+--- a/brave/chromium_src/components/update_client/protocol_serializer.cc
++++ b/brave/chromium_src/components/update_client/protocol_serializer.cc
+@@ -22,7 +22,9 @@
+     bool is_foreground) {
+   auto headers = BuildUpdateCheckExtraRequestHeaders_ChromiumImpl(
+       prod_id, browser_version, ids, is_foreground);
+-  headers.insert({"BraveServiceKey", BUILDFLAG(BRAVE_SERVICES_KEY)});
++  if constexpr (BUILDFLAG(BRAVE_SERVICES_KEY)[0] != '\0') {
++    headers.insert({"BraveServiceKey", BUILDFLAG(BRAVE_SERVICES_KEY)});
++  }
+   return headers;
+ }
+ 
+diff --git a/brave/components/ntp_background_images/common/view_counter_pref_registry.cc b/brave/components/ntp_background_images/common/view_counter_pref_registry.cc
+--- a/brave/components/ntp_background_images/common/view_counter_pref_registry.cc
++++ b/brave/components/ntp_background_images/common/view_counter_pref_registry.cc
+@@ -54,7 +54,7 @@
+                                 false);
+   registry->RegisterBooleanPref(prefs::kBrandedWallpaperNotificationDismissed,
+                                 false);
+-  registry->RegisterBooleanPref(prefs::kNewTabPageShowBackgroundImage, true);
++  registry->RegisterBooleanPref(prefs::kNewTabPageShowBackgroundImage, false);
+   registry->RegisterIntegerPref(
+       prefs::kNewTabTakeoverInfobarRemainingDisplayCount,
+       kNewTabTakeoverInfobarRemainingDisplayCountThreshold);

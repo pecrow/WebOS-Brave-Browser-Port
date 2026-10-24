@@ -1,0 +1,21 @@
+diff --git a/chrome/browser/renderer_context_menu/render_view_context_menu.cc b/chrome/browser/renderer_context_menu/render_view_context_menu.cc
+--- a/chrome/browser/renderer_context_menu/render_view_context_menu.cc
++++ b/chrome/browser/renderer_context_menu/render_view_context_menu.cc
+@@ -4617,6 +4617,7 @@
+ }
+ 
+ bool RenderViewContextMenu::IsPrintPreviewEnabled() const {
++#if BUILDFLAG(ENABLE_PRINTING)
+   if (IsGlicWindow(this, browser_context_) &&
+       base::FeatureList::IsEnabled(features::kGlicPrintMenuItem)) {
+     return GetPrefs(browser_context_)->GetBoolean(prefs::kPrintingEnabled) &&
+@@ -4633,6 +4634,9 @@
+ 
+   BrowserWindowInterface* browser = GetBrowser();
+   return browser && chrome::CanPrint(browser);
++#else
++  return false;
++#endif  // BUILDFLAG(ENABLE_PRINTING)
+ }
+ 
+ bool RenderViewContextMenu::IsQRCodeGeneratorEnabled() const {

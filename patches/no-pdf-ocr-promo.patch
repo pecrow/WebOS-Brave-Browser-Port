@@ -1,0 +1,35 @@
+diff --git a/chrome/browser/ui/views/user_education/browser_user_education_service.cc b/chrome/browser/ui/views/user_education/browser_user_education_service.cc
+--- a/chrome/browser/ui/views/user_education/browser_user_education_service.cc
++++ b/chrome/browser/ui/views/user_education/browser_user_education_service.cc
+@@ -112,7 +112,6 @@
+ #include "components/feature_engagement/public/event_constants.h"
+ #include "components/feature_engagement/public/feature_constants.h"
+ #include "components/lens/lens_features.h"
+-#include "components/pdf/browser/pdf_document_helper.h"
+ #include "components/safe_browsing/core/common/safebrowsing_referral_methods.h"
+ #include "components/saved_tab_groups/public/features.h"
+ #include "components/send_tab_to_self/features.h"
+@@ -174,6 +173,7 @@
+ 
+ #if BUILDFLAG(ENABLE_PDF)
+ #include "chrome/browser/pdf/pdf_help_bubble_handler_factory.h"
++#include "components/pdf/browser/pdf_document_helper.h"
+ #endif
+ 
+ namespace {
+@@ -1084,6 +1084,7 @@
+                        "Triggered when the PDF Viewer opens.")));
+ #endif  // BUILDFLAG(ENABLE_PDF_INK2)
+ 
++#if BUILDFLAG(ENABLE_PDF)
+   // kIPHPdfSearchifyFeature:
+   registry.RegisterFeature(std::move(
+       FeaturePromoSpecification::CreateForToastPromo(
+@@ -1118,6 +1119,7 @@
+                 }
+                 return nullptr;
+               }))));
++#endif  // BUILDFLAG(ENABLE_PDF)
+ 
+   // kIPHLensOverlayFeature:
+   registry.RegisterFeature(std::move(

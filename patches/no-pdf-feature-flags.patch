@@ -1,0 +1,12 @@
+diff --git a/chrome/browser/about_flags.cc b/chrome/browser/about_flags.cc
+--- a/chrome/browser/about_flags.cc
++++ b/chrome/browser/about_flags.cc
+@@ -11128,7 +11128,7 @@
+      kOsMac | kOsWin | kOsLinux,
+      FEATURE_VALUE_TYPE(features::kGlicPrintMenuItem)},
+ 
+-#if !BUILDFLAG(IS_ANDROID)
++#if !BUILDFLAG(IS_ANDROID) && BUILDFLAG(ENABLE_PDF)
+     {"glic-pdf-summarize", flag_descriptions::kGlicPdfSummarizeName,
+      flag_descriptions::kGlicPdfSummarizeDescription, kOsDesktop,
+      FEATURE_WITH_PARAMS_VALUE_TYPE(features::kPdfGlicSummarize,

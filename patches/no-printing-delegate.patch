@@ -1,0 +1,100 @@
+diff --git a/chrome/browser/ui/browser_web_contents_delegate/BUILD.gn b/chrome/browser/ui/browser_web_contents_delegate/BUILD.gn
+--- a/chrome/browser/ui/browser_web_contents_delegate/BUILD.gn
++++ b/chrome/browser/ui/browser_web_contents_delegate/BUILD.gn
+@@ -4,6 +4,7 @@
+ 
+ import("//build/config/ozone.gni")
+ import("//build/config/ui.gni")
++import("//printing/buildflags/buildflags.gni")
+ 
+ if (!is_android) {
+   source_set("browser_web_contents_delegate") {
+@@ -11,7 +12,10 @@
+       "browser_web_contents_delegate.cc",
+       "browser_web_contents_delegate.h",
+     ]
+-    public_deps = [ "//chrome/browser:browser_public_dependencies" ]
++    public_deps = [
++      "//chrome/browser:browser_public_dependencies",
++      "//printing/buildflags",
++    ]
+     deps = [
+       "//base",
+       "//chrome/browser:file_select_helper",
+@@ -38,10 +42,12 @@
+       "//components/headless/console_message_logger",
+       "//components/javascript_dialogs",
+       "//components/page_load_metrics/browser",
+-      "//components/printing/browser",
+       "//content/public/browser",
+       "//ui/base",
+     ]
++    if (enable_printing) {
++      deps += [ "//components/printing/browser" ]
++    }
+     if (use_aura) {
+       deps += [ "//chrome/browser/ui:overscroll_pref_manager" ]
+     }
+diff --git a/chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.h b/chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.h
+--- a/chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.h
++++ b/chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.h
+@@ -9,6 +9,7 @@
+ #include "base/timer/elapsed_timer.h"
+ #include "content/public/browser/file_select_listener.h"
+ #include "content/public/browser/web_contents_delegate.h"
++#include "printing/buildflags/buildflags.h"
+ #include "ui/base/unowned_user_data/scoped_unowned_user_data.h"
+ 
+ class BrowserUiController;
+@@ -253,11 +254,13 @@
+       bool include_actionable_elements,
+       base::OnceCallback<void(base::expected<std::string, std::string>)>
+           callback) override;
++#if BUILDFLAG(ENABLE_PRINTING)
+   void PrintCrossProcessSubframe(
+       content::WebContents* web_contents,
+       const gfx::Rect& rect,
+       int document_cookie,
+       content::RenderFrameHost* subframe_host) const override;
++#endif
+   void CapturePaintPreviewOfSubframe(
+       content::WebContents* web_contents,
+       const gfx::Rect& rect,
+diff --git a/chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.cc b/chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.cc
+--- a/chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.cc
++++ b/chrome/browser/ui/browser_web_contents_delegate/browser_web_contents_delegate.cc
+@@ -70,7 +70,6 @@
+ #include "components/page_load_metrics/browser/metrics_web_contents_observer.h"
+ #include "components/paint_preview/browser/paint_preview_client.h"
+ #include "components/permissions/permission_request_manager.h"
+-#include "components/printing/browser/print_composite_client.h"
+ #include "components/split_tabs/split_tab_id.h"
+ #include "components/tabs/public/split_tab_data.h"
+ #include "components/tabs/public/tab_interface.h"
+@@ -105,6 +104,10 @@
+ #include "ui/base/window_open_disposition.h"
+ #include "url/origin.h"
+ 
++#if BUILDFLAG(ENABLE_PRINTING)
++#include "components/printing/browser/print_composite_client.h"
++#endif
++
+ #if defined(USE_AURA)
+ #include "chrome/browser/ui/overscroll_pref_manager.h"
+ #endif  // defined(USE_AURA)
+@@ -1484,6 +1487,7 @@
+       }).Then(std::move(callback)));
+ }
+ 
++#if BUILDFLAG(ENABLE_PRINTING)
+ void BrowserWebContentsDelegate::PrintCrossProcessSubframe(
+     content::WebContents* web_contents,
+     const gfx::Rect& rect,
+@@ -1494,6 +1498,7 @@
+     client->PrintCrossProcessSubframe(rect, document_cookie, subframe_host);
+   }
+ }
++#endif
+ 
+ void BrowserWebContentsDelegate::CapturePaintPreviewOfSubframe(
+     content::WebContents* web_contents,

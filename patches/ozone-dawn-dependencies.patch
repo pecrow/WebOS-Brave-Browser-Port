@@ -1,0 +1,28 @@
+diff --git a/gpu/command_buffer/service/BUILD.gn b/gpu/command_buffer/service/BUILD.gn
+--- a/gpu/command_buffer/service/BUILD.gn
++++ b/gpu/command_buffer/service/BUILD.gn
+@@ -485,10 +485,5 @@
+       deps += [ "//ui/ozone" ]
+-
+-      if (is_linux || is_chromeos) {
+-        deps += [ "//third_party/libsync" ]
+-        deps += [ "//ui/gfx/linux:drm" ]
+-      }
+     }
+ 
+     if (is_linux && use_dawn) {
+       sources += [
+@@ -520,6 +515,13 @@
+       ]
+     }
+   }
+ 
++  if (use_ozone && (enable_vulkan || use_dawn) && (is_linux || is_chromeos)) {
++    deps += [
++      "//third_party/libsync",
++      "//ui/gfx/linux:drm",
++    ]
++  }
++
+   if (is_apple) {
+     sources += [

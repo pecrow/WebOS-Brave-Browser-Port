@@ -1,0 +1,38 @@
+diff --git a/chrome/browser/plugins/plugin_response_interceptor_url_loader_throttle.cc b/chrome/browser/plugins/plugin_response_interceptor_url_loader_throttle.cc
+--- a/chrome/browser/plugins/plugin_response_interceptor_url_loader_throttle.cc
++++ b/chrome/browser/plugins/plugin_response_interceptor_url_loader_throttle.cc
+@@ -203,6 +203,7 @@
+ 
+   std::string extension_id;
+   std::optional<MimeHandlerStreamManager::CachedFallbackBody> cached_body;
++#if BUILDFLAG(ENABLE_PDF)
+   if (response_head->mime_type == pdf::kPDFMimeType) {
+     // A generic MIME handler extension called
+     // chrome.mimeHandler.abortAndFallbackToNativeHandler() on a prior
+@@ -227,6 +228,7 @@
+       }
+     }
+   }
++#endif  // BUILDFLAG(ENABLE_PDF)
+ 
+   if (extension_id.empty()) {
+     extension_id = PluginUtils::GetExtensionIdForMimeType(
+@@ -415,6 +417,7 @@
+   } else {
+     transferrable_loader->url_loader = std::move(original_loader);
+     transferrable_loader->url_loader_client = std::move(original_client);
++#if BUILDFLAG(ENABLE_PDF)
+     // Buffer the response body in memory while forwarding the bytes to
+     // the handler, so a later
+     // chrome.mimeHandler.abortAndFallbackToNativeHandler() call can hand
+@@ -435,7 +438,9 @@
+       body_cache = extensions::MimeHandlerBodyCache::Create(
+           std::move(consumer_handle), &forwarding_pipe);
+       transferrable_loader->body = std::move(forwarding_pipe);
+-    } else {
++    } else
++#endif  // BUILDFLAG(ENABLE_PDF)
++    {
+       transferrable_loader->body = std::move(consumer_handle);
+     }
+   }

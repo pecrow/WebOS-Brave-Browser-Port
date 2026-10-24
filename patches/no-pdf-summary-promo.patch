@@ -1,0 +1,24 @@
+diff --git a/chrome/browser/ui/views/user_education/browser_user_education_service.cc b/chrome/browser/ui/views/user_education/browser_user_education_service.cc
+--- a/chrome/browser/ui/views/user_education/browser_user_education_service.cc
++++ b/chrome/browser/ui/views/user_education/browser_user_education_service.cc
+@@ -174,3 +174,3 @@
+ 
+-#if BUILDFLAG(ENABLE_PDF_INK2)
++#if BUILDFLAG(ENABLE_PDF)
+ #include "chrome/browser/pdf/pdf_help_bubble_handler_factory.h"
+@@ -1041,6 +1041,7 @@
+           .SetBubbleIcon(kLightbulbOutlineIcon)
+           .SetBubbleTitleText(IDS_PASSWORD_MANAGER_IPH_CREATE_SHORTCUT_TITLE)));
+ 
++#if BUILDFLAG(ENABLE_PDF)
+   // kIPHPdfGlicSummarizeFeature:
+   registry.RegisterFeature(std::move(
+       FeaturePromoSpecification::CreateForToastPromo(
+@@ -1058,6 +1059,7 @@
+           .SetMetadata(151, "cuianthony@chromium.org",
+                        "Triggered when the PDF Viewer loads with the "
+                        "Summarize button.")));
++#endif  // BUILDFLAG(ENABLE_PDF)
+ 
+ #if BUILDFLAG(ENABLE_PDF_INK2)
+   // kIPHPdfInkSignaturesFeature:

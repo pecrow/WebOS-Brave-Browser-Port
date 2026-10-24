@@ -1,0 +1,14 @@
+diff --git a/brave/chromium_src/chrome/browser/ui/views/permissions/permission_prompt_bubble_base_view.cc b/brave/chromium_src/chrome/browser/ui/views/permissions/permission_prompt_bubble_base_view.cc
+--- a/brave/chromium_src/chrome/browser/ui/views/permissions/permission_prompt_bubble_base_view.cc
++++ b/brave/chromium_src/chrome/browser/ui/views/permissions/permission_prompt_bubble_base_view.cc
+@@ -146,8 +146,8 @@
+ #else
+ void AddAdditionalWidevineViewControlsIfNeeded(
+     views::BubbleDialogDelegateView* dialog_delegate_view,
+-    const std::vector<raw_ptr<permissions::PermissionRequest,
+-                              VectorExperimental>>& requests) {}
++    const std::vector<std::unique_ptr<permissions::PermissionRequest>>&
++        requests) {}
+ #endif
+ 
+ // Custom combobox, shows permission lifetime options and applies selected value

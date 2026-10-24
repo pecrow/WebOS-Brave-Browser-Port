@@ -1,0 +1,34 @@
+diff --git a/brave/browser/misc_metrics/process_misc_metrics.cc b/brave/browser/misc_metrics/process_misc_metrics.cc
+--- a/brave/browser/misc_metrics/process_misc_metrics.cc
++++ b/brave/browser/misc_metrics/process_misc_metrics.cc
+@@ -18,6 +18,7 @@
+ #include "components/prefs/pref_change_registrar.h"
+ #include "components/prefs/pref_registry_simple.h"
+ #include "components/prefs/pref_service.h"
++#include "third_party/widevine/cdm/buildflags.h"
+ #if !BUILDFLAG(IS_ANDROID)
+ #include "brave/browser/misc_metrics/default_browser_monitor_delegate_impl.h"
+ #include "brave/browser/misc_metrics/vertical_tab_metrics.h"
+@@ -35,10 +36,12 @@
+ ProcessMiscMetrics::ProcessMiscMetrics(PrefService* local_state)
+     : local_state_(local_state) {
+-  pref_change_registrar_.Init(local_state);
++  pref_change_registrar_.Init(local_state_);
++#if BUILDFLAG(ENABLE_WIDEVINE)
+   pref_change_registrar_.Add(
+       kWidevineEnabled,
+       base::BindRepeating(&ProcessMiscMetrics::ReportSimpleMetrics,
+                           base::Unretained(this)));
++#endif
+ 
+ #if !BUILDFLAG(IS_ANDROID)
+   menu_metrics_ = std::make_unique<MenuMetrics>(local_state);
+@@ -120,6 +123,8 @@
+ void ProcessMiscMetrics::ReportSimpleMetrics() {
++#if BUILDFLAG(ENABLE_WIDEVINE)
+   UMA_HISTOGRAM_BOOLEAN(kWidevineEnabledHistogramName,
+                         local_state_->GetBoolean(kWidevineEnabled));
++#endif
+ }
+ 
+ void ProcessMiscMetrics::RegisterPrefs(PrefRegistrySimple* registry) {
