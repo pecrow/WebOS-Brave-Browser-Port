@@ -1,6 +1,14 @@
 'use strict';
 
 module.exports = function (state, preferences) {
+    var homepage = 'https://github.com/pecrow/WebOS-Brave-Browser-Port/';
+    preferences.homepage = homepage;
+    preferences.homepage_is_newtabpage = false;
+    preferences.browser = preferences.browser || {};
+    preferences.browser.show_home_button = true;
+    preferences.session = preferences.session || {};
+    preferences.session.restore_on_startup = 4;
+    preferences.session.startup_urls = [homepage];
     state.performance_tuning = state.performance_tuning || {};
     state.performance_tuning.high_efficiency_mode =
         state.performance_tuning.high_efficiency_mode || {};

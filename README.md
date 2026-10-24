@@ -54,7 +54,8 @@ and launch Brave. This **one complete IPK** contains the engine, private runtime
 patched audio, native display/input host, fonts, and initial public ad-block data.
 No separate browser payload, bridge package, USB storage, or manual profile
 configuration is required. New profiles receive the TV defaults automatically;
-existing profiles are preserved.
+the project repository is the default startup page and Home-button destination.
+Existing profiles and their home/startup settings are preserved.
 
 **Storage:** about 300 MiB downloaded and 832 MiB installed, plus profile/cache
 storage and temporary installation space.

@@ -133,8 +133,17 @@ def verify(package):
         raise ValueError("Launcher still expects an external payload")
     state = json.loads(small["defaults/profile/Local State"])
     preferences = json.loads(small["defaults/profile/Default/Preferences"])
-    if set(state) != {"performance_tuning"} or set(preferences) != {"profile"}:
+    if (set(state) != {"performance_tuning"} or
+            set(preferences) != {"profile", "homepage", "homepage_is_newtabpage",
+                                 "browser", "session"}):
         raise ValueError("Unexpected content in generated profile defaults")
+    homepage = "https://github.com/pecrow/WebOS-Brave-Browser-Port/"
+    if (preferences["homepage"] != homepage or
+            preferences["homepage_is_newtabpage"] is not False or
+            preferences["browser"] != {"show_home_button": True} or
+            preferences["session"] != {
+                "restore_on_startup": 4, "startup_urls": [homepage]}):
+        raise ValueError("Repository home/startup defaults do not match")
     memory = state["performance_tuning"]["high_efficiency_mode"]
     if memory != {"state": 2, "aggressiveness": 1}:
         raise ValueError("Memory Saver defaults do not match the TV baseline")

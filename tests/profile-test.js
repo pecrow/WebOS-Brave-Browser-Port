@@ -25,6 +25,12 @@ try {
     assert.strictEqual(actualState.performance_tuning.high_efficiency_mode.aggressiveness, 1);
     var actualPreferences = JSON.parse(
         fs.readFileSync(path.join(profile, 'Default', 'Preferences'), 'utf8'));
+    var homepage = 'https://github.com/pecrow/WebOS-Brave-Browser-Port/';
+    assert.strictEqual(actualPreferences.homepage, homepage);
+    assert.strictEqual(actualPreferences.homepage_is_newtabpage, false);
+    assert.strictEqual(actualPreferences.browser.show_home_button, true);
+    assert.strictEqual(actualPreferences.session.restore_on_startup, 4);
+    assert.deepStrictEqual(actualPreferences.session.startup_urls, [homepage]);
     assert.strictEqual(actualPreferences.profile.content_settings.exceptions.autoplay[
         'https://www.youtube.com:443,*'].setting, 2);
     assert.strictEqual(fs.readFileSync(path.join(profile, 'filter-component', 'list.txt'),
@@ -34,9 +40,18 @@ try {
         assert.strictEqual(fs.statSync(path.join(profile, 'Local State')).mode & 511, 384);
     }
     fs.writeFileSync(path.join(profile, 'Local State'), '{"keep":"user changes"}');
+    var userPreferences = JSON.stringify({
+        homepage: 'https://example.com/',
+        homepage_is_newtabpage: true,
+        browser: {show_home_button: false},
+        session: {restore_on_startup: 1}
+    });
+    fs.writeFileSync(path.join(profile, 'Default', 'Preferences'), userPreferences);
     assert.deepStrictEqual(initialize(profile, seed), {created: false});
     assert.strictEqual(fs.readFileSync(path.join(profile, 'Local State'), 'utf8'),
         '{"keep":"user changes"}');
+    assert.strictEqual(fs.readFileSync(
+        path.join(profile, 'Default', 'Preferences'), 'utf8'), userPreferences);
 
     fs.writeFileSync(path.join(seed, 'Default', 'Preferences'), '{broken');
     var invalid = path.join(root, 'invalid');

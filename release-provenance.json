@@ -1,7 +1,7 @@
 {
   "release": "1.0.0",
   "package": "org.webosbrew.brave.b9_1.0.0_arm.ipk",
-  "package_sha256": "663844bb692f2635e71da80d92116d28c357eded092cd35068b3dce57c0bb202",
+  "package_sha256": "189e54cfd391029dfebfe6d12f4e3097822531d53f31fcc5104d49222a798c64",
   "revisions": {
     "brave": "c7357bfd2a76c2467ba1ae62593a81ae92c05205",
     "chromium": "0e66b94549a8bd85f03fbdf189b752d6e7b63c32",
@@ -729,6 +729,8 @@
     "Runtime source package archives accompany the release.",
     "PulseAudio source and local patch are included in the source bundle.",
     "FFmpeg source and its exact local diff are included in the source bundle.",
-    "Original package binaries are unchanged from the TV-tested IPK."
+    "Original package binaries are unchanged from the TV-tested IPK.",
+    "Repacked October 24, 2026 with the project repository as the fresh-profile startup page and Home-button destination; existing profiles are preserved.",
+    "Only defaults/profile/Default/Preferences and SHA256SUMS changed from the original TV-tested package."
   ]
 }
