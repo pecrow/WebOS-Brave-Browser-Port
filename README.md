@@ -16,12 +16,28 @@ An unofficial Brave browser port for rooted LG TVs, maintained by **Pecrow**.
 
 ## Features
 
-- Tabs, bookmarks, Reading List, extensions, and Safe Browsing.
-- Shields and ad blocking, with filter downloads after closing the browser.
-- Remote pointer, scrolling, on-screen keyboard, and Back navigation.
-  Hold Back for three seconds to close the app.
-- TV-tuned memory settings and Memory Saver enabled by default.
-- Repository homepage for new profiles. Existing profiles and settings are preserved.
+| Feature | Status | Details |
+|---|---|---|
+| Websites, tabs, bookmarks, Reading List | Included | Standard browser features retained. |
+| Remote pointer, clicks, scroll wheel | Working | Native input handling and popup mouse-capture fixes. |
+| On-screen keyboard and Back button | Working | Short Back navigates; hold Back for three seconds to close the app. |
+| Audio playback | Working | Patched audio client for webOS. |
+| Hardware video decoding | Working | H.264/AAC and compatible HLS streams verified on the B9; other formats may fall back to software or be unsupported. |
+| GitHub shortcut | Included | Icon beside Shields opens the repository in a new tab, independently of homepage settings. |
+| Black / Ultra Dark theme | Default for new profiles | Existing theme preferences are preserved. |
+| Repository homepage | Default for new profiles | Existing home/startup settings are preserved. |
+| Shields and ad blocking | Enabled | Public filters and scriptlets; filter downloads run after closing the browser. |
+| Extensions and Safe Browsing | Included | Individual extension compatibility is not guaranteed. |
+| Memory Saver | Enabled by default | Medium setting with TV-tuned memory budgets. |
+| YouTube autoplay | Blocked by default | Manual playback remains available. |
+| AI assistants and local AI | Disabled | Removed from this build. |
+| Wallet, Rewards, Brave Ads | Disabled | Website ad blocking remains enabled. |
+| Brave VPN, Tor, News, Talk, Playlist | Disabled | Optional browser extras removed. |
+| PDF viewer and printing | Disabled | Includes print preview. |
+| Widevine DRM | Disabled | Streaming services requiring Widevine are unsupported. |
+| Browser speech service and background mode | Disabled | Reduced background functionality. |
+| Automatic browser engine updates | Disabled | Install a new package to update the browser; ad-block filters update separately. |
+| Accelerated browser rendering | Not integrated | Browser UI and page rendering still use software; compatible video uses the native decoder. |
 
 ## Installation
 
