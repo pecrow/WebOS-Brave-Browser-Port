@@ -673,7 +673,9 @@ static void input_event(SDL_Event *event)
 
 static void draw(void)
 {
-    sdl_check(SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255));
+    const char *native_media = getenv("BRAVE_WEBOS_NATIVE_MEDIA");
+    sdl_check(SDL_SetRenderDrawColor(renderer, 0, 0, 0,
+        native_media && strcmp(native_media, "1") == 0 ? 0 : 255));
     sdl_check(SDL_RenderClear(renderer));
     uint64_t previous = 0;
     for (int count = 0; count < MAX_WINDOWS; ++count) {
@@ -774,16 +776,79 @@ int main(int argc, char **argv)
     sdl_check(SDL_SetHint(SDL_HINT_WEBOS_ACCESS_POLICY_KEYS_BACK, "1"));
     sdl_check(SDL_SetHintWithPriority(SDL_HINT_RETURN_KEY_HIDES_IME, "0",
                                      SDL_HINT_OVERRIDE));
-    sdl_check(SDL_SetAppMetadata("Brave B9", "experimental", "org.webosbrew.brave.b9"));
+    const char *app_id = getenv("APPID");
+    if (!app_id || !*app_id)
+        app_id = "org.webosbrew.brave.b9";
+    sdl_check(SDL_SetAppMetadata("Brave B9", "experimental", app_id));
     sdl_check(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS));
+    const char *native_media = getenv("BRAVE_WEBOS_NATIVE_MEDIA");
+    SDL_WindowFlags window_flags = SDL_WINDOW_FULLSCREEN;
+    if (native_media && strcmp(native_media, "1") == 0)
+        window_flags |= SDL_WINDOW_TRANSPARENT;
     sdl_check(SDL_CreateWindowAndRenderer("Brave", DISPLAY_WIDTH, DISPLAY_HEIGHT,
-                                         SDL_WINDOW_FULLSCREEN, &display, &renderer));
+                                         window_flags, &display, &renderer));
     sdl_check(SDL_SetRenderLogicalPresentation(renderer, DISPLAY_WIDTH, DISPLAY_HEIGHT,
                                               SDL_LOGICAL_PRESENTATION_LETTERBOX));
     dirty = true;
     fprintf(stderr, "Native display ready\n");
     int status = EXIT_SUCCESS;
+    pid_t media = -1;
     pid_t browser = -1;
+    if (native_media && strcmp(native_media, "1") == 0) {
+        const char *media_socket = getenv("BRAVE_WEBOS_MEDIA_SOCKET");
+        char helper[4096], identity[32];
+        int copied = snprintf(helper, sizeof(helper), "%s", argv[0]);
+        char *name = copied >= 0 && (size_t)copied < sizeof(helper) ?
+                     strrchr(helper, '/') : NULL;
+        if (!media_socket || !*media_socket || copied < 0 ||
+            (size_t)copied >= sizeof(helper) || !name ||
+            (size_t)(name - helper) + sizeof("/webos-media") > sizeof(helper)) {
+            fprintf(stderr, "Native media helper path is invalid\n");
+            status = EXIT_FAILURE;
+            goto shutdown;
+        }
+        strcpy(name + 1, "webos-media");
+        snprintf(identity, sizeof(identity), "%lu", (unsigned long)browser_uid);
+        media = fork();
+        if (media < 0) {
+            perror("Start native media helper");
+            status = EXIT_FAILURE;
+            goto shutdown;
+        }
+        if (media == 0) {
+            close(listener);
+            close(parent_fd);
+            execl(helper, helper, media_socket, app_id, identity, (char *)NULL);
+            static const char failure[] = "Cannot execute native media helper\n";
+            write(STDERR_FILENO, failure, sizeof(failure) - 1);
+            _exit(127);
+        }
+        bool ready = false;
+        for (int attempt = 0; attempt < 500; ++attempt) {
+            struct stat socket_info;
+            if (lstat(media_socket, &socket_info) == 0 && S_ISSOCK(socket_info.st_mode)) {
+                ready = true;
+                break;
+            }
+            int result;
+            pid_t exited = waitpid(media, &result, WNOHANG);
+            if (exited == media) {
+                fprintf(stderr, "Native media helper startup failed, status=%d\n", result);
+                media = -1;
+                break;
+            } else if (exited < 0 && errno != EINTR) {
+                perror("Wait for native media helper startup");
+                media = -1;
+                break;
+            }
+            SDL_Delay(10);
+        }
+        if (!ready) {
+            fprintf(stderr, "Native media helper did not become ready\n");
+            status = EXIT_FAILURE;
+            goto shutdown;
+        }
+    }
     if (argc >= 5) {
         browser = fork();
         if (browser < 0) {
@@ -833,7 +898,21 @@ int main(int argc, char **argv)
                     (unsigned long long)(render_started - input_started),
                     (unsigned long long)(finished - render_started));
         if (dump_requested)
+shutdown:
             dump_display_state();
+        if (media > 0) {
+            int result;
+            pid_t exited = waitpid(media, &result, WNOHANG);
+            if (exited == media) {
+                fprintf(stderr, "Native media helper exited, status=%d exit=%d signal=%d\n",
+                        result, WIFEXITED(result) ? WEXITSTATUS(result) : -1,
+                        WIFSIGNALED(result) ? WTERMSIG(result) : 0);
+                media = -1;
+            } else if (exited < 0 && errno != EINTR) {
+                perror("Wait for native media helper");
+                media = -1;
+            }
+        }
         if (browser > 0) {
             int result;
             pid_t exited = waitpid(browser, &result, WNOHANG);
@@ -908,6 +987,28 @@ int main(int argc, char **argv)
                 status = EXIT_FAILURE;
             }
         }
+    }
+    if (media > 0) {
+        if (kill(media, SIGTERM) != 0 && errno != ESRCH)
+            perror("Stop native media helper");
+        pid_t result;
+        uint64_t deadline = SDL_GetTicks() + 5000;
+        do {
+            result = waitpid(media, NULL, WNOHANG);
+            if (result == 0 || (result < 0 && errno == EINTR))
+                SDL_Delay(10);
+        } while ((result == 0 || (result < 0 && errno == EINTR)) &&
+                 SDL_GetTicks() < deadline);
+        if (result == 0 || (result < 0 && errno == EINTR)) {
+            fprintf(stderr, "Native media helper did not stop; terminating it\n");
+            if (kill(media, SIGKILL) != 0 && errno != ESRCH)
+                perror("Terminate native media helper");
+            do {
+                result = waitpid(media, NULL, 0);
+            } while (result < 0 && errno == EINTR);
+        }
+        if (result < 0 && errno != ECHILD)
+            perror("Reap native media helper");
     }
     for (int i = 0; i < MAX_CLIENTS; ++i)
         if (clients[i].fd >= 0)

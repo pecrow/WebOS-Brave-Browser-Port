@@ -24,9 +24,9 @@ python3 scripts/build-port.py --full
 python3 scripts/build-pulse.py
 bash scripts/build-display.sh "$PWD"
 python3 scripts/package-app.py \
-  --output-dir "$HOME/brave-webos-release-1.0.0"
+  --output-dir "$HOME/brave-webos-release-1.1.0"
 python3 scripts/verify-package.py \
-  "$HOME/brave-webos-release-1.0.0/org.webosbrew.brave.b9_1.0.0_arm.ipk"
+  "$HOME/brave-webos-release-1.1.0/org.webosbrew.brave.b9_1.1.0_arm.ipk"
 ```
 
 The complete IPK and its SHA-256 file are written to the selected output
@@ -37,6 +37,9 @@ packages.
 Versions and toolchain hashes are recorded in `build-config.json`.
 `gn-args.json` selects the TV feature set; `patches/` contains the required
 browser and audio changes. SDL is fetched from its pinned upstream release.
+The display build also compiles the ARM32 native video helper using the pinned
+webOS SDK's Starfish/ACB headers. The helper uses the TV's existing media libraries;
+firmware libraries are not redistributed in the package.
 Packaging generates a clean profile seed from settings and public filters,
 never from a personal TV profile. Filter and CA downloads require internet
 access during packaging; source URLs/checksums are included in the payload.
@@ -54,5 +57,5 @@ ctest --test-dir "$HOME/brave-webos-protocol-tests" --output-on-failure
 The archive verifier checks file hashes, bundled dependencies, permissions,
 release metadata, initial settings, and absence of personal profile/session
 files. Hardware installation and GUI/audio/input checks still require a
-compatible rooted TV. A clean upstream rebuild has not yet been repeated for
-the 1.0.0 packaging changes.
+compatible rooted TV. Incremental browser builds and native playback have been
+verified on the B9; a clean upstream rebuild has not yet been repeated.

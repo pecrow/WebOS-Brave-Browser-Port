@@ -1,7 +1,7 @@
 {
-  "release": "1.0.0",
-  "package": "org.webosbrew.brave.b9_1.0.0_arm.ipk",
-  "package_sha256": "189e54cfd391029dfebfe6d12f4e3097822531d53f31fcc5104d49222a798c64",
+  "release": "1.1.0",
+  "package": "org.webosbrew.brave.b9_1.1.0_arm.ipk",
+  "package_sha256": "b1b7f17977f3240b45648473d6df290271da4b33014015d89a1f1244a9c8ec2f",
   "revisions": {
     "brave": "c7357bfd2a76c2467ba1ae62593a81ae92c05205",
     "chromium": "0e66b94549a8bd85f03fbdf189b752d6e7b63c32",
@@ -709,7 +709,7 @@
   ],
   "audio": {
     "revision": "e5ad31e873eed62bc580a86a61177047f9e8c491",
-    "patch_sha256": "1392bd1ac4943b74109c4ec81d4b3f11656faecb8a9ce32b6037553caf37ce24",
+    "patch_sha256": "51accb4ace2584f839f87dbaf66c5fc8c7c97f16242a9bf7e1e4a3dcdba229c9",
     "libraries": {
       "libpulse.so.0": {
         "path": "lib/libpulse.so.0",
@@ -727,10 +727,23 @@
   },
   "notes": [
     "Runtime source package archives accompany the release.",
-    "PulseAudio source and local patch are included in the source bundle.",
-    "FFmpeg source and its exact local diff are included in the source bundle.",
-    "Original package binaries are unchanged from the TV-tested IPK.",
-    "Repacked October 24, 2026 with the project repository as the fresh-profile startup page and Home-button destination; existing profiles are preserved.",
-    "Only defaults/profile/Default/Preferences and SHA256SUMS changed from the original TV-tested package."
-  ]
+    "PulseAudio and FFmpeg sources and their local changes are included in the source bundle.",
+    "Native H.264/AAC playback and the GitHub toolbar shortcut were verified on an LG B9.",
+    "The complete production-ID package includes the native helper and uses internal storage.",
+    "Diagnostic access is disabled in the public launcher.",
+    "New profiles use the repository homepage and Ultra Dark theme; existing profiles are preserved."
+  ],
+  "native_media": {
+    "helper": "webos-media",
+    "helper_sha256": "e549e1841719b7b9579a51f6e40b93dc4a0bfcd25db9e3a33362adee3f0b0a20",
+    "architecture": "ARM32",
+    "cpp_standard": "C++11",
+    "sdk_release": "webos-c14c7bd",
+    "sdk_sha256": "61ada10c6b2b94510968b99137762cbd7a7956b4bdc4e456792ae8bbe000410e",
+    "firmware_apis": [
+      "Starfish",
+      "AcbAPI"
+    ],
+    "firmware_libraries_bundled": false
+  }
 }

@@ -32,7 +32,7 @@ for directory in "$APP" "$APP/engine" "$APP/runtime" "$APP/display"; do
         [ "$(stat -c %a "$directory")" = 755 ] ||
         fail 'Application directory has unsafe ownership or permissions.'
 done
-for file in "$APP/engine/brave" "$APP/webos-display" "$APP/browser-exec" \
+for file in "$APP/engine/brave" "$APP/webos-display" "$APP/webos-media" "$APP/browser-exec" \
             "$APP/runtime/lib/ld-linux-aarch64.so.1" "$APP/launch-engine.sh"; do
     [ -f "$file" ] && [ ! -L "$file" ] &&
         [ "$(stat -c %u "$file")" = 0 ] &&

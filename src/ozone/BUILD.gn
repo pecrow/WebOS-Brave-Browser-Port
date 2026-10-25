@@ -1,3 +1,16 @@
+source_set("media_protocol") {
+  sources = [
+    "webos_media_protocol.c",
+    "webos_media_protocol.h",
+    "webos_native_geometry.cc",
+    "webos_native_geometry.h",
+  ]
+  deps = [
+    "//base",
+    "//ui/gfx/geometry",
+  ]
+}
+
 source_set("webos") {
   sources = [
     "ozone_platform_webos.cc",

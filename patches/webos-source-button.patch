@@ -1,0 +1,139 @@
+diff --git a/brave/browser/ui/views/brave_actions/brave_actions_container.cc b/brave/browser/ui/views/brave_actions/brave_actions_container.cc
+--- a/brave/browser/ui/views/brave_actions/brave_actions_container.cc
++++ b/brave/browser/ui/views/brave_actions/brave_actions_container.cc
+@@ -16,14 +16,21 @@
+ #include "brave/browser/ui/webui/brave_shields/shields_panel_ui.h"
+ #include "brave/components/brave_rewards/core/buildflags/buildflags.h"
+ #include "brave/components/constants/pref_names.h"
++#include "brave/components/vector_icons/vector_icons.h"
+ #include "brave/ui/color/nala/nala_color_id.h"
+ #include "chrome/browser/profiles/profile.h"
+ #include "chrome/browser/ui/browser.h"
+ #include "chrome/browser/ui/layout_constants.h"
++#include "chrome/browser/ui/navigator/browser_navigator.h"
++#include "chrome/browser/ui/navigator/browser_navigator_params.h"
++#include "chrome/browser/ui/views/toolbar/toolbar_button.h"
+ #include "components/prefs/pref_service.h"
+ #include "ui/base/metadata/metadata_impl_macros.h"
++#include "ui/base/page_transition_types.h"
++#include "ui/base/window_open_disposition.h"
+ #include "ui/views/layout/box_layout.h"
+ #include "ui/views/view.h"
++#include "url/gurl.h"
+ 
+ #if BUILDFLAG(ENABLE_BRAVE_REWARDS)
+ #include "brave/browser/brave_rewards/rewards_util.h"
+@@ -70,6 +77,7 @@
+   AddActionViewForRewards();
+ #endif
+   AddActionViewForShields();
++  AddActionViewForSource();
+   AddChildViewAt(brave_button_separator, 0);
+ 
+ #if BUILDFLAG(ENABLE_BRAVE_REWARDS)
+@@ -127,6 +135,34 @@
+ }
+ #endif
+ 
++void BraveActionsContainer::AddActionViewForSource() {
++  if (!browser_window_interface_) {
++    return;
++  }
++  auto button = std::make_unique<ToolbarButton>(
++      base::BindRepeating(&BraveActionsContainer::OpenProjectSource,
++                          weak_ptr_factory_.GetWeakPtr()));
++  button->SetVectorIcon(kLeoSocialGithubIcon);
++  button->SetTooltipText(u"GitHub: WebOS-Brave-Browser-Port");
++  button->SetAccessibleName(u"GitHub: WebOS-Brave-Browser-Port");
++  button->SetHorizontalAlignment(gfx::ALIGN_CENTER);
++  button->SetFlipCanvasOnPaintForRTLUI(false);
++  button->SetFocusBehavior(views::View::FocusBehavior::ALWAYS);
++  button->SetPreferredSize(GetActionSize());
++  source_action_btn_ =
++      AddChildViewAt(std::move(button), shields_action_btn_ ? 1 : 0);
++}
++
++void BraveActionsContainer::OpenProjectSource() {
++  NavigateParams params(
++      browser_window_interface_,
++      GURL("https://github.com/pecrow/WebOS-Brave-Browser-Port"),
++      ui::PAGE_TRANSITION_AUTO_BOOKMARK);
++  params.disposition = WindowOpenDisposition::NEW_FOREGROUND_TAB;
++  params.user_gesture = true;
++  Navigate(&params);
++}
++
+ void BraveActionsContainer::Update() {
+   if (shields_action_btn_) {
+     shields_action_btn_->Update();
+@@ -143,21 +179,28 @@
+ }
+ 
+ void BraveActionsContainer::UpdateVisibility() {
+-  bool can_show = false;
++  bool can_show = source_action_btn_ && source_action_btn_->GetVisible();
+ 
+   if (shields_action_btn_) {
+-    can_show = shields_action_btn_->GetVisible();
++    if (source_action_btn_) {
++      shields_action_btn_->SetVisible(!should_hide_);
++    }
++    can_show = can_show || shields_action_btn_->GetVisible();
+   }
+ 
+ #if BUILDFLAG(ENABLE_BRAVE_REWARDS)
+   if (rewards_action_btn_) {
++    if (source_action_btn_) {
++      rewards_action_btn_->SetVisible(!should_hide_ &&
++                                     ShouldShowBraveRewardsAction());
++    }
+     can_show = can_show || rewards_action_btn_->GetVisible();
+   }
+ #endif
+ 
+   // If no buttons are visible, then we want to hide this view so that the
+   // separator is not displayed.
+-  SetVisible(!should_hide_ && can_show);
++  SetVisible((source_action_btn_ || !should_hide_) && can_show);
+ }
+ 
+ gfx::Size BraveActionsContainer::GetActionSize() const {
+diff --git a/brave/browser/ui/views/brave_actions/brave_actions_container.h b/brave/browser/ui/views/brave_actions/brave_actions_container.h
+--- a/brave/browser/ui/views/brave_actions/brave_actions_container.h
++++ b/brave/browser/ui/views/brave_actions/brave_actions_container.h
+@@ -18,6 +18,7 @@
+ class BraveActionViewController;
+ class BraveActionsContainerTest;
+ class BraveShieldsActionView;
++class ToolbarButton;
+ 
+ #if BUILDFLAG(ENABLE_BRAVE_REWARDS)
+ class BraveRewardsActionView;
+@@ -70,6 +71,8 @@
+   void OnBraveRewardsPreferencesChanged();
+ #endif
+   void AddActionViewForShields();
++  void AddActionViewForSource();
++  void OpenProjectSource();
+ 
+   void UpdateVisibility();
+   gfx::Size GetActionSize() const;
+@@ -82,6 +85,7 @@
+   raw_ptr<BrowserWindowInterface> browser_window_interface_ = nullptr;
+ 
+   raw_ptr<BraveShieldsActionView> shields_action_btn_ = nullptr;
++  raw_ptr<ToolbarButton> source_action_btn_ = nullptr;
+ #if BUILDFLAG(ENABLE_BRAVE_REWARDS)
+   raw_ptr<BraveRewardsActionView> rewards_action_btn_ = nullptr;
+ 
+diff --git a/brave/components/vector_icons/BUILD.gn b/brave/components/vector_icons/BUILD.gn
+--- a/brave/components/vector_icons/BUILD.gn
++++ b/brave/components/vector_icons/BUILD.gn
+@@ -117,6 +117,7 @@
+     "leo_shopping_bag.icon",
+     "leo_shred_data.icon",
+     "leo_smartphone_laptop.icon",
++    "leo_social_github.icon",
+     "leo_spaces.icon",
+     "leo_swap_horizontal.icon",
+     "leo_trash.icon",

@@ -24,6 +24,8 @@ marker.write_text("Generated from brave-webos/src; edit the original sources.\n"
 for original in list((project / "src/ozone").iterdir()) + [
     project / "src/display/protocol.c",
     project / "src/display/protocol.h",
+    project / "src/media/webos_media_protocol.c",
+    project / "src/media/webos_media_protocol.h",
 ]:
     if original.is_file():
         with tempfile.NamedTemporaryFile(
@@ -31,6 +33,15 @@ for original in list((project / "src/ozone").iterdir()) + [
         ) as generated:
             generated.write(original.read_text(encoding="utf-8"))
         os.replace(generated.name, destination / original.name)
+
+for name in ("webos_renderer.cc", "webos_renderer.h"):
+    original = project / "src/media" / name
+    target = source / "media/renderers" / name
+    with tempfile.NamedTemporaryFile(
+        mode="w", encoding="utf-8", newline="\n", dir=target.parent, delete=False
+    ) as generated:
+        generated.write(original.read_text(encoding="utf-8"))
+    os.replace(generated.name, target)
 
 if options.export_only:
     print("Updated generated port sources; no additional build started.")
@@ -44,6 +55,8 @@ patches = [
     "webos-no-supervised-profiles.patch",
     "webos-no-custom-background-ui.patch",
     "webos-no-sandbox-warning.patch",
+    "webos-native-media.patch",
+    "webos-source-button.patch",
 ]
 if not arguments.get("enable_widevine", True):
     patches.append("no-widevine-permission-helper.patch")

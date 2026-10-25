@@ -246,8 +246,8 @@ if not options.reference_smoke:
     )
     (stage / "launch.sh").chmod(0o755)
     (stage / "start-native.sh").chmod(0o755)
-    for binary in ["webos-display", "browser-exec"]:
-        shutil.copyfile(workspace / "display-build" / binary, stage / binary)
+    for binary in ["webos-display", "webos-media", "browser-exec"]:
+        shutil.copyfile(workspace / "display-native-build" / binary, stage / binary)
         (stage / binary).chmod(0o755)
     subprocess.run(
         ["patchelf", "--set-rpath", "$ORIGIN/display/lib", str(stage / "webos-display")],

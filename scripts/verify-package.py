@@ -16,7 +16,7 @@ def verify(package):
     members = []
     required = {
         "appinfo.json", "launch.sh", "launch-engine.sh", "start-native.sh",
-        "browser-exec", "webos-display", "engine/brave", "engine/resources.pak",
+        "browser-exec", "webos-display", "webos-media", "engine/brave", "engine/resources.pak",
         "engine/icudtl.dat", "engine/LICENSE", "display/lib/libSDL3.so.0",
         "runtime/lib/ld-linux-aarch64.so.1", "runtime/lib/libpulse.so.0",
         "runtime/lib/libpulsecommon-16.1.so", "runtime/fonts.conf",
@@ -116,8 +116,12 @@ def verify(package):
             raise ValueError("Broken package symlink: " + name)
     info = json.loads(small["appinfo.json"])
     if (info["version"] != control["Version"] or info["id"] != control["Package"] or
-            info["vendor"] != "Pecrow" or control["Maintainer"] != "Pecrow"):
+            info["vendor"] != "Pecrow" or control["Maintainer"] != "Pecrow" or
+            info["main"] != "webos-media"):
         raise ValueError("Inconsistent release metadata")
+    helper = small["webos-media"]
+    if helper[:6] != b"\x7fELF\x01\x01" or helper[18:20] != b"\x28\x00":
+        raise ValueError("Native media helper is not ARM32")
     for name in ["launch.sh", "launch-engine.sh", "start-native.sh"]:
         script = small[name]
         if b"\r" in script or b"--remote-debugging" in script:
@@ -131,19 +135,26 @@ def verify(package):
         raise ValueError("Bootstrap depends on an external USB application")
     if b"brave-b9-internal/app" in small["launch.sh"]:
         raise ValueError("Launcher still expects an external payload")
+    if (b"export BRAVE_WEBOS_NATIVE_MEDIA=1\n" not in small["launch-engine.sh"] or
+            b'export BRAVE_WEBOS_MEDIA_SOCKET="$RUN/media.sock"\n' not in
+            small["launch-engine.sh"]):
+        raise ValueError("Native hardware playback is not enabled")
     state = json.loads(small["defaults/profile/Local State"])
     preferences = json.loads(small["defaults/profile/Default/Preferences"])
     if (set(state) != {"performance_tuning"} or
             set(preferences) != {"profile", "homepage", "homepage_is_newtabpage",
-                                 "browser", "session"}):
+                                 "browser", "session", "brave"}):
         raise ValueError("Unexpected content in generated profile defaults")
     homepage = "https://github.com/pecrow/WebOS-Brave-Browser-Port/"
     if (preferences["homepage"] != homepage or
             preferences["homepage_is_newtabpage"] is not False or
-            preferences["browser"] != {"show_home_button": True} or
+            preferences["browser"] != {
+                "show_home_button": True, "theme": {"color_scheme2": 2}} or
             preferences["session"] != {
                 "restore_on_startup": 4, "startup_urls": [homepage]}):
         raise ValueError("Repository home/startup defaults do not match")
+    if preferences["brave"] != {"dark_mode_migrated": True, "darker_mode": True}:
+        raise ValueError("Black browser theme defaults do not match")
     memory = state["performance_tuning"]["high_efficiency_mode"]
     if memory != {"state": 2, "aggressiveness": 1}:
         raise ValueError("Memory Saver defaults do not match the TV baseline")

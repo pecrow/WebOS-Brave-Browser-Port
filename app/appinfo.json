@@ -1,10 +1,10 @@
 {
   "id": "org.webosbrew.brave.b9",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "vendor": "Pecrow",
   "type": "native",
   "title": "Brave B9 Experimental",
-  "main": "launch.sh",
+  "main": "webos-media",
   "icon": "icon.png",
   "appDescription": "Experimental native Brave port for the LG B9; reduced browser sandbox."
 }

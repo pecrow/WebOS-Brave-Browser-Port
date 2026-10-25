@@ -22,9 +22,12 @@ portions.
 
 This repository contains the webOS port sources, required patches, feature/build
 configuration, and build scripts. `BUILD.md` describes how to fetch the pinned
-Brave/Chromium sources and rebuild. The 1.0.0 release also provides runtime source
+Brave/Chromium sources and rebuild. The 1.1.0 release also provides runtime source
 archives and provenance for the bundled libraries, separately from the IPK.
 Those archives are for source availability and rebuilding, not installation.
+
+The native video helper calls Starfish/ACB media APIs supplied by the TV firmware.
+Those firmware libraries are not included in this repository or the release.
 
 The browser's upstream license information remains available through its own
 license/credits resources. No upstream copyright holder or author is replaced

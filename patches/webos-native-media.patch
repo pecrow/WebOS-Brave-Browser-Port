@@ -1,0 +1,180 @@
+diff --git a/components/viz/service/BUILD.gn b/components/viz/service/BUILD.gn
+index 42fc3926fd..efbe36419b 100644
+--- a/components/viz/service/BUILD.gn
++++ b/components/viz/service/BUILD.gn
+@@ -334,6 +334,10 @@ viz_component("service") {
+     "//ui/gfx/animation/keyframe",
+   ]
+ 
++  if (is_linux) {
++    deps += [ "//ui/ozone/platform/webos:media_protocol" ]
++  }
++
+   public_deps = [
+     ":viz_debugger",
+     ":viz_service_export",
+diff --git a/components/viz/service/display/software_renderer.cc b/components/viz/service/display/software_renderer.cc
+index d262c5be32..6e3ea3542f 100644
+--- a/components/viz/service/display/software_renderer.cc
++++ b/components/viz/service/display/software_renderer.cc
+@@ -58,6 +58,11 @@
+ #include "ui/gfx/geometry/skia_conversions.h"
+ #include "ui/gfx/geometry/transform.h"
+ 
++#if BUILDFLAG(IS_LINUX)
++#include "components/viz/common/quads/video_hole_draw_quad.h"
++#include "ui/ozone/platform/webos/webos_native_geometry.h"
++#endif
++
+ namespace viz {
+ namespace {
+ 
+@@ -359,6 +364,22 @@ void SoftwareRenderer::DoDrawQuad(const DrawQuad* quad,
+     case DrawQuad::Material::kSharedElement:
+       NOTREACHED();
+     case DrawQuad::Material::kVideoHole:
++#if BUILDFLAG(IS_LINUX)
++      if (ui::WebOSNativeMediaEnabled() &&
++          current_frame()->current_render_pass == current_frame()->root_render_pass) {
++        const auto* hole = VideoHoleDrawQuad::MaterialCast(quad);
++        const SkRect bounds = current_canvas_->getTotalMatrix().mapRect(
++            gfx::RectToSkRect(quad->rect));
++        ui::UpdateWebOSNativeVideoGeometry(
++            hole->overlay_plane_id,
++            gfx::ToEnclosingRect(gfx::SkRectToRectF(bounds)),
++            current_frame()->root_render_pass->output_rect.size());
++        SkPaint clear;
++        clear.setBlendMode(SkBlendMode::kClear);
++        current_canvas_->drawRect(gfx::RectToSkRect(quad->rect), clear);
++        break;
++      }
++#endif
+       // VideoHoleDrawQuad should only be used by Cast, and should
+       // have been replaced by cast-specific OverlayProcessor before
+       // reach here. In non-cast build, an untrusted render could send such
+diff --git a/media/renderers/BUILD.gn b/media/renderers/BUILD.gn
+index 62934c5573..a4e9c41c71 100644
+--- a/media/renderers/BUILD.gn
++++ b/media/renderers/BUILD.gn
+@@ -64,6 +64,17 @@ source_set("renderers") {
+     "//ui/gl:gl_enums",
+   ]
+ 
++  if (is_linux) {
++    sources += [
++      "webos_renderer.cc",
++      "webos_renderer.h",
++    ]
++    deps += [
++      "//media/formats",
++      "//ui/ozone/platform/webos:media_protocol",
++    ]
++  }
++
+   if (is_win) {
+     sources += [
+       "win/media_engine_extension.cc",
+diff --git a/media/renderers/renderer_impl_factory.cc b/media/renderers/renderer_impl_factory.cc
+index 0682ed8402..c473a28746 100644
+--- a/media/renderers/renderer_impl_factory.cc
++++ b/media/renderers/renderer_impl_factory.cc
+@@ -18,6 +18,10 @@
+ #include "media/video/gpu_video_accelerator_factories.h"
+ #include "media/video/mappable_shared_image_video_frame_pool.h"
+ 
++#if BUILDFLAG(IS_LINUX)
++#include "media/renderers/webos_renderer.h"
++#endif
++
+ namespace media {
+ 
+ #if BUILDFLAG(IS_ANDROID)
+@@ -130,8 +134,14 @@ std::unique_ptr<Renderer> RendererImplFactory::CreateRenderer(
+                           target_color_space, gpu_factories),
+       true, media_log_.get(), std::move(mappable_si_pool), media_player_id_));
+ 
+-  return std::make_unique<RendererImpl>(
++  auto renderer = std::make_unique<RendererImpl>(
+       media_task_runner, std::move(audio_renderer), std::move(video_renderer));
++#if BUILDFLAG(IS_LINUX)
++  return MaybeWrapWebOSRenderer(std::move(renderer), media_task_runner,
++                               video_renderer_sink, media_log_.get());
++#else
++  return renderer;
++#endif
+ }
+ 
+ }  // namespace media
+diff --git a/media/formats/BUILD.gn b/media/formats/BUILD.gn
+--- a/media/formats/BUILD.gn
++++ b/media/formats/BUILD.gn
+@@ -43,6 +43,7 @@ source_set("formats") {
+     "//media/filters",
+     "//media/muxers",
+     "//media/muxers:unit_tests",
++    "//media/renderers",
+   ]
+ 
+   sources = [
+@@ -319,6 +320,21 @@ static_library("test_support") {
+   }
+ }
+ 
++if (is_linux && proprietary_codecs) {
++  executable("webos_aac_unittests") {
++    testonly = true
++    sources = [
++      "../base/mock_media_log.cc",
++      "mp4/aac_unittest.cc",
++    ]
++    deps = [
++      "//media",
++      "//testing/gmock",
++      "//testing/gtest:gtest_main",
++    ]
++  }
++}
++
+ source_set("unit_tests") {
+   testonly = true
+   sources = [
+diff --git a/media/formats/mp4/aac_unittest.cc b/media/formats/mp4/aac_unittest.cc
+--- a/media/formats/mp4/aac_unittest.cc
++++ b/media/formats/mp4/aac_unittest.cc
+@@ -263,6 +263,36 @@ TEST_F(AACTest, CreateAdtsFromEsds) {
+   EXPECT_EQ(base::span(header->extra_data), base::span(codec_desc));
+ }
+ 
++TEST_F(AACTest, HlsExplicitSbrCreatesLcAdts) {
++  const struct {
++    std::vector<uint8_t> config;
++    int core_rate;
++    std::vector<uint8_t> core_config;
++  } cases[] = {
++      {{0x29, 0x91, 0x88, 0x00}, 48000, {0x11, 0x90}},
++      {{0x2b, 0x11, 0x88, 0x00}, 24000, {0x13, 0x10}},
++  };
++  for (const auto& test : cases) {
++    ASSERT_TRUE(Parse(test.config));
++    EXPECT_TRUE(aac_.fits_in_adts());
++    EXPECT_EQ(aac_.GetOutputSamplesPerSecond(false), 48000);
++    EXPECT_EQ(aac_.GetChannelLayout(false), ChannelLayoutConfig::Stereo());
++
++    const uint8_t packet[] = {0x00, 0x01, 0x02};
++    size_t header_size = 0;
++    const auto adts = aac_.CreateAdtsFromEsds(packet, &header_size);
++    ASSERT_EQ(header_size, kADTSHeaderMinSize);
++    ASSERT_EQ(adts.size(), sizeof(packet) + header_size);
++    EXPECT_EQ(adts.subspan(header_size), base::span(packet));
++
++    const auto header = ADTSStreamParser::ParseHeader(adts);
++    ASSERT_TRUE(header);
++    EXPECT_EQ(header->sample_rate, test.core_rate);
++    EXPECT_EQ(header->channel_layout, ChannelLayout::CHANNEL_LAYOUT_STEREO);
++    EXPECT_EQ(base::span(header->extra_data), base::span(test.core_config));
++  }
++}
++
+ TEST_F(AACTest, FitsInAdts_ExplicitFrequencyReturnsFalse) {
+   // Corresponds to AAC-LC, explicit 22050Hz, Stereo.
+   // Audio Object Type (AOT) = 2 (AAC-LC) -> 5 bits: 00010

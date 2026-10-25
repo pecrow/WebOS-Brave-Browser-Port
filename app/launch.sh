@@ -2,6 +2,7 @@
 set -eu
 unset LD_PRELOAD LD_AUDIT LD_LIBRARY_PATH
 umask 077
+export BRAVE_WEBOS_NATIVE_MEDIA=1
 APP=/media/developer/apps/usr/palm/applications/org.webosbrew.brave.b9
 DATA=/media/developer/brave-b9-data
 BROWSER="$APP/engine/brave"
@@ -87,6 +88,8 @@ export FONTCONFIG_FILE="$APP/runtime/fonts.conf"
 export FONTCONFIG_PATH="$APP/runtime"
 export PULSE_SERVER=unix:/var/run/pulse/native
 cd "$APP"
+[ -x "$APP/webos-media" ] || { echo 'Native media helper is missing.' >&2; exit 1; }
+export BRAVE_WEBOS_MEDIA_SOCKET="$RUN/media.sock"
 # The tile-memory override also applies to software rasterization.
 exec "$APP/webos-display" "$BRAVE_WEBOS_DISPLAY_SOCKET" "$UID_BROWSER" -- \
     "$APP/browser-exec" "$BROWSER" \

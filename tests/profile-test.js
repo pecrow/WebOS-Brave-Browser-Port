@@ -29,6 +29,9 @@ try {
     assert.strictEqual(actualPreferences.homepage, homepage);
     assert.strictEqual(actualPreferences.homepage_is_newtabpage, false);
     assert.strictEqual(actualPreferences.browser.show_home_button, true);
+    assert.strictEqual(actualPreferences.browser.theme.color_scheme2, 2);
+    assert.strictEqual(actualPreferences.brave.dark_mode_migrated, true);
+    assert.strictEqual(actualPreferences.brave.darker_mode, true);
     assert.strictEqual(actualPreferences.session.restore_on_startup, 4);
     assert.deepStrictEqual(actualPreferences.session.startup_urls, [homepage]);
     assert.strictEqual(actualPreferences.profile.content_settings.exceptions.autoplay[
@@ -43,7 +46,8 @@ try {
     var userPreferences = JSON.stringify({
         homepage: 'https://example.com/',
         homepage_is_newtabpage: true,
-        browser: {show_home_button: false},
+        browser: {show_home_button: false, theme: {color_scheme2: 1}},
+        brave: {dark_mode_migrated: true, darker_mode: false},
         session: {restore_on_startup: 1}
     });
     fs.writeFileSync(path.join(profile, 'Default', 'Preferences'), userPreferences);
