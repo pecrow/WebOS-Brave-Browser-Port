@@ -44,7 +44,13 @@ if [ ! -d "$DATA" ]; then
     mkdir -m 700 "$DATA"
     chown "$UID_BROWSER:$GID_BROWSER" "$DATA"
 fi
-if [ "$(stat -c %u "$DATA")" != "$UID_BROWSER" ] ||
+if [ -d "$DATA" ] && [ ! -L "$DATA" ] &&
+   [ "$(stat -c %u "$DATA")" = "$UID_BROWSER" ] &&
+   [ "$(stat -c %a "$DATA")" = 777 ]; then
+    chmod 700 "$DATA"
+fi
+if [ -L "$DATA" ] ||
+   [ "$(stat -c %u "$DATA")" != "$UID_BROWSER" ] ||
    [ "$(stat -c %a "$DATA")" != 700 ]; then
     echo 'Browser data directory has unexpected ownership or permissions.' >&2
     exit 1

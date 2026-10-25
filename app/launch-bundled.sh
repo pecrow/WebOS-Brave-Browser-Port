@@ -27,6 +27,12 @@ if [ "$(id -u)" != 0 ]; then
         '{"id":"org.webosbrew.brave.b9"}'
 fi
 for directory in "$APP" "$APP/engine" "$APP/runtime" "$APP/display"; do
+    # Developer Mode changes /media/developer to mode 777 at boot.
+    if [ -d "$directory" ] && [ ! -L "$directory" ] &&
+       [ "$(stat -c %u "$directory")" = 0 ] &&
+       [ "$(stat -c %a "$directory")" = 777 ]; then
+        chmod 755 "$directory" || fail 'Could not restore application directory permissions.'
+    fi
     [ -d "$directory" ] && [ ! -L "$directory" ] &&
         [ "$(stat -c %u "$directory")" = 0 ] &&
         [ "$(stat -c %a "$directory")" = 755 ] ||
@@ -34,6 +40,11 @@ for directory in "$APP" "$APP/engine" "$APP/runtime" "$APP/display"; do
 done
 for file in "$APP/engine/brave" "$APP/webos-display" "$APP/webos-media" "$APP/browser-exec" \
             "$APP/runtime/lib/ld-linux-aarch64.so.1" "$APP/launch-engine.sh"; do
+    if [ -f "$file" ] && [ ! -L "$file" ] &&
+       [ "$(stat -c %u "$file")" = 0 ] &&
+       [ "$(stat -c %a "$file")" = 777 ]; then
+        chmod 755 "$file" || fail 'Could not restore executable permissions.'
+    fi
     [ -f "$file" ] && [ ! -L "$file" ] &&
         [ "$(stat -c %u "$file")" = 0 ] &&
         [ "$(stat -c %a "$file")" = 755 ] ||

@@ -1,7 +1,7 @@
 {
   "release": "1.1.0",
   "package": "org.webosbrew.brave.b9_1.1.0_arm.ipk",
-  "package_sha256": "b1b7f17977f3240b45648473d6df290271da4b33014015d89a1f1244a9c8ec2f",
+  "package_sha256": "c12bfdbe0db05bfe0c49c65e23af680049f6a8366293e049a02fb1bf221c453d",
   "revisions": {
     "brave": "c7357bfd2a76c2467ba1ae62593a81ae92c05205",
     "chromium": "0e66b94549a8bd85f03fbdf189b752d6e7b63c32",
@@ -731,6 +731,7 @@
     "Native H.264/AAC playback and the GitHub toolbar shortcut were verified on an LG B9.",
     "The complete production-ID package includes the native helper and uses internal storage.",
     "Diagnostic access is disabled in the public launcher.",
+    "Startup restores known Developer Mode boot-reset permissions without resetting profiles.",
     "New profiles use the repository homepage and Ultra Dark theme; existing profiles are preserved."
   ],
   "native_media": {

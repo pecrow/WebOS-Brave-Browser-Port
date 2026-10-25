@@ -49,6 +49,7 @@ access during packaging; source URLs/checksums are included in the payload.
 ```bash
 npm run test:adblock
 npm run test:profile
+sudo python3 tests/launcher-test.py
 cmake -S . -B "$HOME/brave-webos-protocol-tests" -DBUILD_DISPLAY_HOST=OFF
 cmake --build "$HOME/brave-webos-protocol-tests"
 ctest --test-dir "$HOME/brave-webos-protocol-tests" --output-on-failure
@@ -59,3 +60,5 @@ release metadata, initial settings, and absence of personal profile/session
 files. Hardware installation and GUI/audio/input checks still require a
 compatible rooted TV. Incremental browser builds and native playback have been
 verified on the B9; a clean upstream rebuild has not yet been repeated.
+The launcher tests use isolated temporary files and require root to verify
+ownership checks and recovery from Developer Mode's boot-time permission reset.
